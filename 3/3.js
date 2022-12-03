@@ -6,9 +6,7 @@ const getPriority = (x) => {
     return code >= 97 ? code - 96 : code - 38;
 };
 
-const getDupe = (x, y, z) => {
-    return [...x].find(i => [...y].includes(i) && (z === undefined || [...z].includes(i)));
-};
+const getDupe = (...vars) => vars.reduce((t, v) => t.filter(x => [...v].includes(x)), [...vars[0]])[0];
 
 console.log(sacks.reduce((t, v) => t += getPriority(getDupe(...v)), 0)); // Answer to part 1
 
