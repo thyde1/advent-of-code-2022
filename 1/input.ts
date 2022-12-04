@@ -1,4 +1,4 @@
-exports.input = `
+export const input = `
 3864
 5112
 3233

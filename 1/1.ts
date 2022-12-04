@@ -1,6 +1,6 @@
-const inputs = require("./input.js").input;
+import { input } from "./input";
 
-const elfInvs =  inputs.split("\n\n").map(inv => inv.split("\n").filter(i => !!i));
+const elfInvs =  input.split("\n\n").map(inv => inv.split("\n").filter(i => !!i));
 const elfTotals = elfInvs.map(inv => inv.reduce((t, v) => t += parseInt(v), 0));
 
 console.log(Math.max(...elfTotals)); // Answer to part 1

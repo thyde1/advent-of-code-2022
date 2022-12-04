@@ -1,0 +1,22 @@
+{
+  "name": "aoc",
+  "version": "1.0.0",
+  "description": "My solutions to Advent of Code 2022",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node ./1/1.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thyde1/advent-of-code-2022.git"
+  },
+  "author": "Tom Hyde",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thyde1/advent-of-code-2022/issues"
+  },
+  "homepage": "https://github.com/thyde1/advent-of-code-2022#readme",
+  "dependencies": {
+    "ts-node": "^10.9.1"
+  }
+}
