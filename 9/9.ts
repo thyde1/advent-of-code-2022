@@ -54,33 +54,25 @@ const calcTailPos = (headPos: Position, tailPos: Position) => {
     return { x: xPos, y: yPos };
 }
 
-let headPosition = { x: 0, y: 0 };
-let tailPosition = { x: 0, y: 0 };
-let pastTailPositions = [tailPosition];
-let directions = getDirections(input);
-for (const direction of directions) {
-    headPosition = calcHeadPos(headPosition, direction);
-    tailPosition = calcTailPos(headPosition, tailPosition);
-    if (!pastTailPositions.find(p => tailPosition.x === p.x && tailPosition.y === p.y)) {
-        pastTailPositions.push(tailPosition);
+const getPastTailPositions = (knotCount: number) => {
+    let directions = getDirections(input);
+
+    const positions = Array<Position>(knotCount).fill({x: 0, y: 0});
+    let pastTailPositions = [positions[positions.length - 1]];
+    for (const direction of directions) {
+        positions[0] = calcHeadPos(positions[0], direction);
+        for (let i = 1; i < positions.length; i++) {
+            positions[i] = calcTailPos(positions[i - 1], positions[i]);
+        }
+
+        const tailPosition = positions[positions.length - 1];
+        if (!pastTailPositions.find(p => tailPosition.x === p.x && tailPosition.y === p.y)) {
+            pastTailPositions.push(tailPosition);
+        }
     }
+
+    return(pastTailPositions.length);
 }
 
-console.log(pastTailPositions.length); // Answer to part 1
-
-const positions = Array<Position>(10).fill({x: 0, y: 0});
-pastTailPositions = [positions[positions.length - 1]];
-directions = getDirections(input);
-for (const direction of directions) {
-    positions[0] = calcHeadPos(positions[0], direction);
-    for (let i = 1; i < positions.length; i++) {
-        positions[i] = calcTailPos(positions[i - 1], positions[i]);
-    }
-
-    tailPosition = positions[positions.length - 1];
-    if (!pastTailPositions.find(p => tailPosition.x === p.x && tailPosition.y === p.y)) {
-        pastTailPositions.push(tailPosition);
-    }
-}
-
-console.log(pastTailPositions.length); // Answer to part 2
+console.log(getPastTailPositions(2)); // Answer to part 1
+console.log(getPastTailPositions(10)); // Answer to part 2
