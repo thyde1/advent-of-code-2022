@@ -38,9 +38,9 @@ const getTotalSignalStrengths = () => {
     return interestingSignals.reduce((t, v) => t += v, 0);
 };
 
-console.log(getTotalSignalStrengths()); // Answer to part 1
+const part1Answer = getTotalSignalStrengths();
 
-const getImage = () => {
+const getImage = async () => {
     const changes = getChanges(getInputs(input));
     const cycleValues = getCycleValues(changes);
     const image: string[] = [];
@@ -57,8 +57,17 @@ const getImage = () => {
         if ((i + 1)  % 40 === 0) {
             image.push("\n");
         }
+        console.clear();
+        console.log(image.join(""));
+        await new Promise(resolve => setTimeout(resolve, 25));
     }
     return image.join("");
 };
 
-console.log(getImage());
+(async() => {
+    const part2Answer = await getImage();
+
+    console.clear();
+    console.log(part1Answer);
+    console.log(part2Answer);
+})();
