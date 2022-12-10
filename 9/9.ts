@@ -54,9 +54,38 @@ const calcTailPos = (headPos: Position, tailPos: Position) => {
     return { x: xPos, y: yPos };
 }
 
-const getPastTailPositions = (knotCount: number) => {
-    let directions = getDirections(input);
+const drawRope = async (positionsHistory: Position[][]) => {
+    const allPositions = positionsHistory.flatMap(p => p);
+    const allX = allPositions.map(p => p.x).sort((a, b) => a - b);
+    const allY = allPositions.map(p => p.y).sort((a, b) => a - b);
+    const gridSize = {
+        xMin: allX[0],
+        xMax: allX[allX.length - 1],
+        yMin: allY[0],
+        yMax: allY[allY.length - 1]
+    };
+    const gridWidth = gridSize.xMax - gridSize.xMin + 1;
+    const gridHeight = gridSize.yMax - gridSize.yMin + 1;
+    for (const positionRecord of positionsHistory) {
+        const grid: string[][] = [];
+        for (let i = 0; i < gridHeight; i++) {
+            grid[i] = Array<string>(gridWidth).fill(" ");
+        }
 
+        for (const position of positionRecord) {
+            grid[position.y - gridSize.yMin][position.x - gridSize.xMin] = "x";
+        }
+
+        console.clear();
+        console.log(grid.map(r => r.join("")).join("\n"));
+        await new Promise(resolve => setTimeout(resolve, 1));
+    }
+
+}
+
+const getPastTailPositions = (knotCount: number, draw: boolean = false) => {
+    let directions = getDirections(input);
+    const positionsHistory: Position[][] = [];
     const positions = Array<Position>(knotCount).fill({x: 0, y: 0});
     let pastTailPositions = [positions[positions.length - 1]];
     for (const direction of directions) {
@@ -69,10 +98,19 @@ const getPastTailPositions = (knotCount: number) => {
         if (!pastTailPositions.find(p => tailPosition.x === p.x && tailPosition.y === p.y)) {
             pastTailPositions.push(tailPosition);
         }
+        positionsHistory.push([...positions]);
+    }
+
+    if (draw) {
+        drawRope(positionsHistory);
     }
 
     return(pastTailPositions.length);
 }
 
-console.log(getPastTailPositions(2)); // Answer to part 1
-console.log(getPastTailPositions(10)); // Answer to part 2
+(async () => {
+    const answer2 = await getPastTailPositions(10);
+
+    console.log(getPastTailPositions(2)); // Answer to part 1
+    console.log(answer2); // Answer to part 2
+})();
