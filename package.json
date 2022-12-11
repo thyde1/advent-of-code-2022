@@ -4,7 +4,7 @@
   "description": "My solutions to Advent of Code 2022",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node ./10/10.ts"
+    "start": "ts-node ./11/11.ts"
   },
   "repository": {
     "type": "git",
