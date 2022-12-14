@@ -3,7 +3,7 @@ import { input } from "./input";
 type Position = { x: number, y: number };
 
 type CavePoint = Position & { type: "rock" | "sand" };
-type Cave = ("rock" | "sand" | undefined)[][];
+type Cave = { [pos: string]: CavePoint };
 
 const getLineRockPositions = (line: Position[]): Position[] => {
     const positions: Position[] = [];
@@ -70,15 +70,27 @@ const drawCave = (rockPositions: CavePoint[]) => {
     console.log(caveString);
 };
 
-const isSolid = (cave: CavePoint[], x: number, y: number) => {
-    return !!cave.find(p => p.x === x && p.y === y);
+const getLocationString = (x: number, y: number) => `${x},${y}`;
+
+const isSolid = (cave: Cave, x: number, y: number) => {
+    const locationString = getLocationString(x, y);
+    return !!cave[locationString];
 }
 
-const simulateSandDrop = (cave: CavePoint[]) => {
+
+const simulateSandDrop = (cave: Cave, isFloor: boolean, yMax: number) => {
     let sandPos = { x: 500, y: 0 };
-    const yMax = cave.map(p => p.y).sort((a, b) => b - a)[0];
     while (true) {
-        if (sandPos.y > yMax) {
+        if (isSolid(cave, sandPos.x, sandPos.y)) {
+            return { atRest: false };
+        }
+
+        if (isFloor && sandPos.y === yMax) {
+            cave[getLocationString(sandPos.x, sandPos.y)] = { ...sandPos, type: "sand" };
+            return { atRest: true };
+        }
+
+        if (sandPos.y > yMax && !isFloor) {
             return { atRest: false };
         }
 
@@ -96,21 +108,30 @@ const simulateSandDrop = (cave: CavePoint[]) => {
             sandPos = { x: sandPos.x + 1, y: sandPos.y + 1 };
             continue;
         }
-        
-        cave.push({ ...sandPos, type: "sand" });
+
+        cave[getLocationString(sandPos.x, sandPos.y)] = { ...sandPos, type: "sand" };
         return { atRest: true };
     }
 }
 
-const rockPositions = getRockPositions(input);
-const cavePoints: CavePoint[] = rockPositions.map(p => ({ ...p, type: "rock" }));
+const doSimulation = (isFloor: boolean) => {
+    const rockPositions = getRockPositions(input);
+    const cavePoints: CavePoint[] = rockPositions.map(p => ({ ...p, type: "rock" }));
+    const cave: Cave = {};
+    for (const x of cavePoints.map(p => ({[`${p.x},${p.y}`]: p}))) {
+        Object.assign(cave, x);
+    };
 
-let grains = 0;
-while (simulateSandDrop(cavePoints).atRest === true) {
-    grains++;
-    console.log(grains);
+
+    const yMax = rockPositions.map(p => p.y).sort((a, b) => b - a)[0] + 1;
+    let grains = 0;
+    while (simulateSandDrop(cave, isFloor, yMax).atRest === true) {
+        grains++;
+    }
+
     drawCave(cavePoints);
+    return grains;
 }
 
-drawCave(cavePoints);
-console.log(grains);
+console.log(doSimulation(false)); // Answer to part 1
+console.log(doSimulation(true)); // Answer to part 2
