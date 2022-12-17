@@ -44,13 +44,11 @@ const getDefinitelyClearInRow = (row: number, map: MapInfo, beaconsAreClear: boo
             delete clear[beacon.x];
         }
     }
-    // console.log(clear);
-    return clear;
-    // return Object.keys(clear).map(key => parseInt(key));
+
+    return Object.keys(clear).map(key => parseInt(key));
 }
 
 const getDefinitelyClearInRowRanges = (row: number, map: MapInfo, maxCoord: number) => {
-    if (row % 100 === 0) console.log("Processing", row);
     const clearRanges: { start: number, end: number }[] = []
     for (const sensor of map) {
         const yDiff = Math.abs(sensor.sensorCoords.y - row);
@@ -68,33 +66,11 @@ const getDefinitelyClearInRowRanges = (row: number, map: MapInfo, maxCoord: numb
         clearRanges.push({ start: xMin, end: xMax });
     }
 
-    // console.log(clear);
     return clearRanges;
-    // return Object.keys(clear).map(key => parseInt(key));
 }
 
 const mapInfo = getInputInfo(input);
-// console.log(Object.keys(getDefinitelyClearInRow(10, mapInfo, true)).length);
 console.log(Object.keys(getDefinitelyClearInRow(2000000, mapInfo, true)).length); // Answer to part 1
-
-const mergeRanges = (ranges: Range[]): Range[] => {
-    const mergeMade = ranges.map((range, i) => {
-        const overlappingRange = ranges.find((r, j) => i !== j && r.start <= range.end && r.end >= range.start)
-        if (overlappingRange) {
-            ranges = ranges.splice(i, 1);
-            overlappingRange.start = Math.min(range.start, overlappingRange.start);
-            overlappingRange.end = Math.max(range.end, overlappingRange.end);
-            return ranges
-        }
-        return false;
-    });
-    if (mergeMade.some(r => r !== false)) {
-        const newRanges = mergeMade.filter(r => r !== false);
-        return mergeRanges((newRanges as Range[][]).flatMap(x => x));
-    }
-
-    return ranges;
-};
 
 const doesRangeCoverAll = (ranges: Range[], maxCoord: number) => {
     if (ranges.find(r => r.start === 0 && r.end === maxCoord)) {
@@ -109,7 +85,7 @@ const doesRangeCoverAll = (ranges: Range[], maxCoord: number) => {
     const wholeRange = { ...firstRange };
     let extended = true;
     while (extended) {
-        const extendingRange = ranges.find(r => r.start <= wholeRange.end && r.end > r.end);
+        const extendingRange = ranges.find(r => r.start <= wholeRange.end && r.end > wholeRange.end);
         if (extendingRange) {
             wholeRange.end = extendingRange.end;
         }
@@ -123,20 +99,37 @@ const doesRangeCoverAll = (ranges: Range[], maxCoord: number) => {
 };
 
 const getDistressLocation = (map: MapInfo, maxCoord: number) => {
-    for (let row = 0; row <= maxCoord; row++) {
+    let distressRow: number | null = null;
+    for (let row = 0; row <= maxCoord && distressRow === null; row++) {
         const impossibleXRanges = getDefinitelyClearInRowRanges(row, map, maxCoord);
         if (!doesRangeCoverAll(impossibleXRanges, maxCoord)) {
-            return row;
+            distressRow = row;
         }
     }
+
+    if (distressRow === null) {
+        throw new Error("We should always find a distress location");
+    }
+
+    const clearSpaces = getDefinitelyClearInRow(distressRow, map, false, maxCoord);
+    const clearSpacesKeyValues = clearSpaces.map(s => ({ [s]: true }));
+    const clearSpacesObject: { [x: number]: boolean } = {};
+    for (let i = 0; i < clearSpacesKeyValues.length; i++) {
+        Object.assign(clearSpacesObject, clearSpacesKeyValues[i]);
+    }
+
+    for (let i = 0; i <= maxCoord; i++) {
+        if (!clearSpacesObject[i]) {
+            return { x: i, y: distressRow };
+        }
+    }
+
     throw new Error("We should always find a distress location");
 }
 
 const getTuningFrequency = (map: MapInfo, maxCoord: number) => {
-    return getDistressLocation(map, maxCoord);
-    // const { x, y } = getDistressLocation(map, maxCoord);
-    // return x * 4000000 + y;
+    const { x, y } = getDistressLocation(map, maxCoord);
+    return x * 4000000 + y;
 }
 
-// console.log(getTuningFrequency(mapInfo, 20));
-console.log(getTuningFrequency(mapInfo, 4000000));
+console.log(getTuningFrequency(mapInfo, 4000000)); // Answer to part 2
