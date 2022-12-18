@@ -43,7 +43,11 @@ const getDistancesToOtherValves = (valves: Valve[]): ValveWithDistances[] => {
     });
 }
 
-const getPermutations = (valves: ValveWithDistances[], time: number, startingValve: Valve): ValveWithDistances[][] => {
+const getPermutations = (
+    valves: ValveWithDistances[],
+    time: number,
+    startingValve: Valve
+): ValveWithDistances[][] => {
     const eligibleValves = valves.filter(v => v.flowRate > 0 && v.distances[startingValve.id] < time);
 
     if (eligibleValves.length <= 1) {
@@ -70,12 +74,48 @@ const getPermutationPressureReleased = (startingValveId: string, valves: ValveWi
     return pressureReleased;
 };
     
-const valves = getDistancesToOtherValves(getValves(input));
-const startingValveId = "AA";
-const possiblePermutations = getPermutations(valves, 30, valves.find(v => v.id === startingValveId) as ValveWithDistances);
+const getMaxPressureReleased = (time: number, twoWorkers: boolean) => {
+    const valves = getDistancesToOtherValves(getValves(input));
+    const startingValveId = "AA";
+    let possiblePermutations =
+        getPermutations(valves, time, valves.find(v => v.id === startingValveId) as ValveWithDistances);
+    if (twoWorkers) {
+        const possiblePermutationsStrings = possiblePermutations.map(p => p.map(v => v.id).join()).reduce((t, v) => {
+            for (let i = 2; i < v.length - 1; i+= 3) {
+                const potentialNewPerm = v.slice(0, i);
+                if (!t.includes(potentialNewPerm)) {
+                    t.push(potentialNewPerm);
+                }
+            }
 
-const bestPermutation = possiblePermutations.map(p => (
-    { perm: p, pressure: getPermutationPressureReleased(startingValveId, p, 30) })
-    ).sort((a, b) => b.pressure - a.pressure)[0];
+            return t;
+        }, [] as string[]);
+        possiblePermutationsStrings.forEach((s) => {
+            const permutation = s.split(",").map(s => valves.find(v => v.id === s)) as ValveWithDistances[];
+            possiblePermutations.push(permutation);
+        });
 
-console.log(bestPermutation.pressure); // Answer to part 1
+        const total = possiblePermutations.length;
+        const pressures: number[] = [];
+        possiblePermutations.forEach((myPermutation, i) => {
+            console.log(`${i} of ${total}`);
+            const myPressureReleased = getPermutationPressureReleased(startingValveId, myPermutation, time);
+            const permutationNodes = myPermutation.map(p => p.id);
+            const elephantPressureReleased = possiblePermutations
+                .filter(p => !p.map(p => p.id).some(v => permutationNodes.includes(v)))
+                .map(p => (
+                    { perm: p, pressure: getPermutationPressureReleased(startingValveId, p, time) })
+                    ).sort((a, b) => b.pressure - a.pressure)[0];
+            pressures.push(myPressureReleased + elephantPressureReleased.pressure);
+        });
+        return pressures.sort((a, b) => b - a)[0];
+    }
+
+    const bestPermutation = possiblePermutations.map(p => (
+        { perm: p, pressure: getPermutationPressureReleased(startingValveId, p, time) })
+        ).sort((a, b) => b.pressure - a.pressure)[0];
+    return bestPermutation.pressure;
+}
+
+console.log(getMaxPressureReleased(30, false)); // Answer to part 1
+console.log(getMaxPressureReleased(26, true)); // Answer to part 2 - takes a good few mins to run
